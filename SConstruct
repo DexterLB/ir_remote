@@ -47,7 +47,7 @@ optlevel = 's'
 # programmer ID, used by AVRDUDE
 # examples: 'stk500', 'avr910', 'avrisp', 'pony'
 # can be changed with --programmer <programmer>
-avrdude_programmer = 'linuxgpio'
+avrdude_programmer = 'stk500'
 
 # port - serial or parallel port to which the
 # hardware programmer is attached.
