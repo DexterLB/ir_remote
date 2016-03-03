@@ -22,7 +22,7 @@ extern "C"
 
 #if USE_PowerOnFunction
 #define SWITCH_PORT 		PORTC					/* PORTx - register for Switch output */
-#define SWITCH_BIT  		PC5						/* bit where OK1 will be connected */
+#define SWITCH_BIT  		PC1						/* bit where OK1 will be connected */
 #define SWITCH_DDR  		DDRC					/* Switch data direction register */
 #endif
 

@@ -21,7 +21,7 @@
 pname = 'usb_ir'
 
 # target chip name (as required by avr-gcc, e.g. atmega8)
-mcu = 'atmega168'
+mcu = 'atmega8'
 
 # chip name used by AVRDUDE (e.g. m8)
 programmer_mcu = 'm8'
