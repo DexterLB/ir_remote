@@ -29,10 +29,10 @@ programmer_mcu = 'm8'
 # source files
 # .c, .cpp or .S (NOT .s !!! for asm)
 # example: ['main.c', 'foo.c', 'lowlevel.S']
-sources = ['main.c', 'usbdrv/usbdrv.c', 'usbdrv/oddebug.c', 'Irmp/irmp.c', 'usbdrv/usbdrvasm.S']
+sources = ['main.c', 'usbdrv/usbdrv.c', 'usbdrv/usbdrvasm.S', 'usbdrv/oddebug.c', 'Irmp/irmp.c']
 
 # additional options (e.g. '-I/path/to/mydir', '-lmylib')
-options = []
+options = ['-Iusbdrv']
 
 # build directory - all output files will go here
 build_dir = 'build'
@@ -53,7 +53,10 @@ avrdude_programmer = 'stk500'
 # hardware programmer is attached.
 # examples: '/dev/ttyS0', 'COM2', '/dev/ttyUSB0'
 # can be changed on the fly with --port <port>
-avrdude_port = None
+avrdude_port = '/dev/ttyUSB0'
+
+# baud - bits per second to transfer to programmer
+avrdude_baud = '115200'
 
 # remote hostname for using avrdude over ssh
 ssh_flash_hostname = "tardis"
@@ -63,10 +66,12 @@ ssh_flash_hostname = "tardis"
 # caution: cflags are passed to both cc and ++
 # but asmflags are all and only passed to as
 
-cflags = '-gdwarf-2 -fpack-struct' \
-    + ' -fshort-enums -funsigned-bitfields' \
-    + ' -funsigned-char' \
-    + ' -Wall -DF_CPU=12000000UL'
+if False:
+    cflags = '-gdwarf-2 -fpack-struct' \
+        + ' -fshort-enums -funsigned-bitfields' \
+        + ' -funsigned-char' \
+        + ' -Wall -DF_CPU=12000000UL'
+cflags = '-Wall -DDEBUG_LEVEL=0 -DF_CPU=12000000UL'
 cppflags = '-fno-exceptions'
 
 asmflags = '-DF_CPU=12000000UL'
@@ -140,6 +145,10 @@ AddOption('--port', dest='port', type='string', nargs=1
             , action='store', help='Port id as used by avrdude')
 avrdude_port = GetOption('port') or avrdude_port
 
+AddOption('--baud', dest='baud', type='string', nargs=1
+            , action='store', help='Baud rate as used by avrdude')
+avrdude_baud = GetOption('baud') or avrdude_baud
+
 AddOption('--hostname', dest='hostname', type='string', nargs=1
             , action='store', help='ssh hostname for remote flashing')
 ssh_flash_hostname = GetOption('hostname') or ssh_flash_hostname
@@ -184,7 +193,10 @@ env.Command('size', targetelf, env['SIZE'] + copt \
 
 # program the flash with avrdude
 avrdude_command = env['AVRDUDE'] \
-    + ' -c ' + avrdude_programmer + ' -p ' + programmer_mcu
+    + ' -c ' + avrdude_programmer + ' -p ' + programmer_mcu \
+
+if avrdude_baud:
+    avrdude_command += ' -b ' + avrdude_baud
 
 if avrdude_port:
     avrdude_command += ' -P ' + avrdude_port
