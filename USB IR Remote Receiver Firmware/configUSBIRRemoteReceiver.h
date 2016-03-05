@@ -18,7 +18,7 @@ extern "C"
 #define USE_BOOTLOADER			1					/* 1 if bootloader option should be included (default), 0 to disable */
 
 //define output pin for power on switch:
-#define USE_PowerOnFunction		1					/* 1, use PowerOn function (default), 0 to disable */
+#define USE_PowerOnFunction		0					/* 1, use PowerOn function (default), 0 to disable */
 
 #if USE_PowerOnFunction
 #define SWITCH_PORT 		PORTC					/* PORTx - register for Switch output */

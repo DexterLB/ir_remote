@@ -175,32 +175,18 @@ init_io(void)
     uchar i = 0;
     uchar j = 0;
 
-    PORTB   = 0xfc;   // off  pull-ups for usb
-    DDRB    = 0x03;   // All pins input exept PB0 and PB1
-    PORTC   = 0xfd;   // 1111 1101 bin: Activate all pull-ups except PC1
-    DDRC    = 0x22;   // 0010 0010 All pins input except PC1 and PC5 
-    PORTD   = 0xfa;   // 1111 1010 bin: activate pull-ups except on USB lines 
-    DDRD    = 0x00;   // 0000 0101 bin: all pins input except USB (-> USB reset) 
+    PORTB   = 0b11111100;   // off  pull-ups for usb
+    DDRB    = 0b00000011;   // All pins input exept PB0 and PB1
+    PORTC   = 0b11111000;   // Activate all pull-ups except PC1
+    DDRC    = 0b00100111;   // All pins input except PC1 and PC5 
+    PORTD   = 0b11111010;   // Activate pull-ups except on USB lines 
+    DDRD    = 0b00000000;   // All pins input except USB (-> USB reset) 
     while(--j)
     {     
         // USB Reset by device only required on Watchdog Reset 
         while(--i); // Delay >10ms for USB reset 
     }
-    DDRB = 0x00;    // 0000 0000 bin: remove USB reset condition 
-
-
-    #if USE_PowerOnFunction
-        /* config PowerOn pin */
-        SWITCH_PORT ^= _BV (SWITCH_BIT);                         /* deactivate pull-ups on PowerOn pin */    
-        SWITCH_DDR  ^= _BV (SWITCH_BIT);                         /* set switch pin as digital output */
-    #endif
-
-	#if IRMP_USE_CALLBACK
-        /* config LED IR Callback pin */
-        LED_PORT ^= _BV (LED_BIT);                               /* deactivate pull-ups on LED IR pin */    
-        LED_DDR  ^= _BV (LED_BIT);                               /* set LED pin as digital output */
-	#endif
-
+    DDRB = 0b00000000;      // Remove USB reset condition 
 }
  
 
@@ -396,14 +382,15 @@ void irmp_log_usb (unsigned short len)
 
 #if IRMP_USE_CALLBACK 	 							/* use IR callbacks */
 void led_callback (uint8_t on)
-{
+{   
+    // The LED is connected to GND so to turn it on we supply a "1"
     if (on)
     {
-       LED_PORT &= ~(_BV (LED_BIT));
+       LED_PORT |= _BV (LED_BIT);
     }
     else
     {
-       LED_PORT |= _BV (LED_BIT);
+       LED_PORT &= ~(_BV (LED_BIT));
     }
 }
 #endif 
