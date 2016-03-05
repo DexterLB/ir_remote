@@ -2,13 +2,69 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 
-	"github.com/StreamBoat/kodi_jsonrpc"
 	"github.com/tarm/serial"
 )
+
+type Mpv struct {
+	filename string
+	client   net.Conn
+}
+
+func NewMpv(filename string) *Mpv {
+	m := &Mpv{
+		filename: filename,
+	}
+	return m
+}
+
+func (m *Mpv) Connect() error {
+	var err error
+
+	m.client, err = net.Dial("unix", m.filename)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Mpv) TrySend(data string) bool {
+	var err error
+	if m.client == nil {
+		err = m.Connect()
+		if err != nil {
+			log.Printf("can't connect to mpv: %s", err)
+			return false
+		}
+	}
+	err = m.Send(data)
+	if err != nil {
+		m.client.Close()
+		err = m.Connect()
+		if err != nil {
+			log.Printf("mpv connection dropped: %s", err)
+			m.client = nil
+			return false
+		}
+		err = m.Send(data)
+		if err != nil {
+			log.Printf("can't send data to mpv: %s", err)
+			return false
+		}
+	}
+	return true
+}
+
+func (m *Mpv) Send(data string) error {
+	_, err := m.client.Write([]byte(data))
+	return err
+}
 
 func readCodesMega8(filename string, codes chan<- string) error {
 	f, err := os.Open(filename)
@@ -68,9 +124,7 @@ func readCodesAt90(filename string, codes chan<- string) error {
 	}
 }
 
-func main() {
-	kodi_jsonrpc.SetLogLevel(kodi_jsonrpc.LogInfoLevel)
-
+func readRemotes() chan string {
 	codes := make(chan string)
 	go func() {
 		err := readCodesAt90("/dev/at90_ir_reader", codes)
@@ -86,7 +140,43 @@ func main() {
 		}
 	}()
 
+	return codes
+}
+
+func getCommandMap(filename string) (map[string]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	decoder := json.NewDecoder(f)
+	commands := make(map[string]string)
+
+	err = decoder.Decode(&commands)
+	if err != nil {
+		return nil, err
+	}
+
+	return commands, nil
+}
+
+func main() {
+	commands, err := getCommandMap("commands.json")
+	if err != nil {
+		log.Fatalf("can't read command map: %s", err)
+	}
+
+	mpv := NewMpv("/tmp/mpv_rpc")
+	codes := readRemotes()
+
 	for code := range codes {
-		log.Printf("got code: %s", code)
+		command, ok := commands[code]
+		if ok {
+			log.Printf("got code %s: command %s", code, command)
+			mpv.TrySend(fmt.Sprintf("%s\n", command))
+		} else {
+			log.Printf("got unknown code %s", code)
+		}
 	}
 }
