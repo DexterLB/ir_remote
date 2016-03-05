@@ -176,9 +176,9 @@ init_io(void)
     uchar j = 0;
 
     PORTB   = 0xfc;   // off  pull-ups for usb
-    DDRB    = 0x03;   // All pins input 
-    PORTC   = 0xf9;   // 1111 1001 bin: Activate all pull-ups except PC1 and PC2
-    DDRC    = 0x26;   // 0010 0110 All pins input except PC1, PC2 and PC5 
+    DDRB    = 0x03;   // All pins input exept PB0 and PB1
+    PORTC   = 0xfd;   // 1111 1101 bin: Activate all pull-ups except PC1
+    DDRC    = 0x22;   // 0010 0010 All pins input except PC1 and PC5 
     PORTD   = 0xfa;   // 1111 1010 bin: activate pull-ups except on USB lines 
     DDRD    = 0x00;   // 0000 0101 bin: all pins input except USB (-> USB reset) 
     while(--j)
@@ -191,9 +191,16 @@ init_io(void)
 
     #if USE_PowerOnFunction
         /* config PowerOn pin */
-        SWITCH_PORT ^=  _BV (SWITCH_BIT);                               /* deactivate pull-ups on PowerOn pin */    
-        SWITCH_DDR ^= _BV (SWITCH_BIT);                                 /* set switch pin as digital output */
+        SWITCH_PORT ^= _BV (SWITCH_BIT);                         /* deactivate pull-ups on PowerOn pin */    
+        SWITCH_DDR  ^= _BV (SWITCH_BIT);                         /* set switch pin as digital output */
     #endif
+
+	#if IRMP_USE_CALLBACK
+        /* config LED IR Callback pin */
+        LED_PORT ^= _BV (LED_BIT);                               /* deactivate pull-ups on LED IR pin */    
+        LED_DDR  ^= _BV (LED_BIT);                               /* set LED pin as digital output */
+	#endif
+
 }
  
 
@@ -386,6 +393,22 @@ void irmp_log_usb (unsigned short len)
 }
 #endif
 /* ------------------------------------------------------------------------- */
+
+#if IRMP_USE_CALLBACK 	 							/* use IR callbacks */
+void led_callback (uint8_t on)
+{
+    if (on)
+    {
+       LED_PORT &= ~(_BV (LED_BIT));
+    }
+    else
+    {
+       LED_PORT |= _BV (LED_BIT);
+    }
+}
+#endif 
+
+/* ------------------------------------------------------------------------- */
 /* main function
 */
 int main(void)
@@ -415,6 +438,10 @@ uchar   i;
 
     irmp_init();                                                                                        // initialize irmp code
     timer_init();                                                                                       // initialize timer
+
+#if IRMP_USE_CALLBACK 	 																				/* use IR callbacks */
+	irmp_set_callback_ptr (led_callback);
+#endif
 
     usbDeviceDisconnect();                                                                              /* enforce re-enumeration, do this while interrupts are disabled! */
     i = 0;

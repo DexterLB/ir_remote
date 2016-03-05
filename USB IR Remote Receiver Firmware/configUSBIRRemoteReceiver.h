@@ -25,7 +25,12 @@ extern "C"
 #define SWITCH_BIT  		PC1						/* bit where OK1 will be connected */
 #define SWITCH_DDR  		DDRC					/* Switch data direction register */
 #endif
-
+ 
+#if IRMP_USE_CALLBACK 	 							/* use IR callbacks */
+	#define LED_PORT 		PORTC                   // LED at PC2
+	#define LED_BIT  		PC2
+	#define LED_DDR  		DDRC
+#endif
 
 #if USE_BOOTLOADER
 	#if IRMP_LOGGING

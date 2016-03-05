@@ -81,14 +81,14 @@
  */
 #ifdef PIC_CCS_COMPILER                                 // PIC CCS Compiler:
 
-#define IRMP_PIN                                PIN_D4  // use PB4 as IR input on PIC
+#define IRMP_PIN                                PIN_B4  // use PB4 as IR input on PIC
 
 #else                                                   // AVR:
 
 #define IRMP_PORT                               PORTD
 #define IRMP_DDR                                DDRD
 #define IRMP_PIN                                PIND
-#define IRMP_BIT                                4       // use PB6 as IR input on AVR
+#define IRMP_BIT                                4       // use PD4 as IR input on AVR
 
 #define input(x)                                ((x) & (1 << IRMP_BIT))
 #endif
@@ -111,7 +111,7 @@
  * Use Callbacks to indicate input signal
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
-#define IRMP_USE_CALLBACK                       0       // flag: 0 = don't use callbacks, 1 = use callbacks, default is 0
+#define IRMP_USE_CALLBACK                       1       // flag: 0 = don't use callbacks, 1 = use callbacks, default is 0
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * DO NOT CHANGE THE FOLLOWING LINES !
